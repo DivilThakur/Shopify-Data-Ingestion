@@ -1,7 +1,6 @@
 import prisma from "../prismaClient.js";
 import crypto from "crypto";
 
-const prisma = new PrismaClient();
 const getTenantId = async (shopDomain) => {
   const tenant = await prisma.tenants.findFirst({
     where: { store_url: shopDomain },
