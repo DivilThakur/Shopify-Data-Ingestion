@@ -1,4 +1,4 @@
-import { PrismaClient } from "../generated/prisma/client.js";
+import prisma from "../prismaClient.js";
 import crypto from "crypto";
 
 const prisma = new PrismaClient();
@@ -16,18 +16,21 @@ export const verifyShopifyWebhook = async (req, res, next) => {
     const shopifyHmac = req.get("X-Shopify-Hmac-Sha256");
 
     if (!shopDomain || !shopifyHmac || !req.rawBody) {
-      console.error("Webhook verification failed: Missing required headers or body");
+      console.error(
+        "Webhook verification failed: Missing required headers or body"
+      );
       return res.status(401).send("Unauthorized");
     }
 
-    
     const tenant = await prisma.tenants.findFirst({
       where: { store_url: shopDomain },
       select: { webhook_secret: true, name: true },
     });
 
     if (!tenant || !tenant.webhook_secret) {
-      console.error(`No tenant or webhook secret found for shop: ${shopDomain}`);
+      console.error(
+        `No tenant or webhook secret found for shop: ${shopDomain}`
+      );
       return res.status(401).send("Unauthorized");
     }
 
@@ -37,12 +40,16 @@ export const verifyShopifyWebhook = async (req, res, next) => {
       .digest("base64");
 
     if (hash !== shopifyHmac) {
-      console.error(`Webhook verification failed for ${tenant.name}: HMAC mismatch`);
+      console.error(
+        `Webhook verification failed for ${tenant.name}: HMAC mismatch`
+      );
       console.log(`Received HMAC: ${shopifyHmac}, Computed HMAC: ${hash}`);
       return res.status(401).send("Unauthorized");
     }
 
-    console.log(`Webhook verification passed for ${tenant.name} (${shopDomain})`);
+    console.log(
+      `Webhook verification passed for ${tenant.name} (${shopDomain})`
+    );
     next();
   } catch (err) {
     console.error("Webhook verification error:", err);
@@ -160,7 +167,7 @@ export const handleOrderWebhook = async (req, res) => {
       // Find the customer if customer data is provided
       let localCustomerId = null;
       const customerShopifyId = customer?.id || customer_id;
-      
+
       if (customerShopifyId) {
         const customerRecord = await prisma.customers.findFirst({
           where: {
@@ -170,11 +177,15 @@ export const handleOrderWebhook = async (req, res) => {
           select: { id: true },
         });
         localCustomerId = customerRecord?.id || null;
-        
+
         if (localCustomerId) {
-          console.log(`Found customer ${localCustomerId} for order ${shopify_id}`);
+          console.log(
+            `Found customer ${localCustomerId} for order ${shopify_id}`
+          );
         } else {
-          console.log(`No customer found for shopify_id ${customerShopifyId} in order ${shopify_id}`);
+          console.log(
+            `No customer found for shopify_id ${customerShopifyId} in order ${shopify_id}`
+          );
         }
       }
 
@@ -185,7 +196,7 @@ export const handleOrderWebhook = async (req, res) => {
             shopify_id: shopify_id.toString(),
           },
         },
-        update: { 
+        update: {
           total_price: parseFloat(total_price) || 0,
           customer_id: localCustomerId,
         },
