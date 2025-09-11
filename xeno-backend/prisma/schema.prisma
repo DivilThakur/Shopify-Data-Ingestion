@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model customers {
+  id          Int       @id @default(autoincrement())
+  tenant_id   Int?
+  shopify_id  String?   @db.VarChar(255)
+  email       String?   @db.VarChar(255)
+  first_name  String?   @db.VarChar(255)
+  last_name   String?   @db.VarChar(255)
+  total_spent Decimal?  @default(0) @db.Decimal
+  created_at  DateTime? @default(now()) @db.Timestamp(6)
+  tenants     tenants?  @relation(fields: [tenant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([tenant_id, shopify_id], map: "customers_tenant_shopify")
+}
+
+model orders {
+  id          Int       @id @default(autoincrement())
+  tenant_id   Int?
+  shopify_id  String?   @db.VarChar(255)
+  total_price Decimal?  @db.Decimal
+  created_at  DateTime? @default(now()) @db.Timestamp(6)
+  tenants     tenants?  @relation(fields: [tenant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([tenant_id, shopify_id], map: "orders_tenant_shopify")
+}
+
+model products {
+  id         Int       @id @default(autoincrement())
+  tenant_id  Int?
+  shopify_id String?   @db.VarChar(255)
+  title      String?   @db.VarChar(255)
+  price      Decimal?  @db.Decimal
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  tenants    tenants?  @relation(fields: [tenant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([tenant_id, shopify_id], map: "products_tenant_shopify")
+}
+
+model tenants {
+  id         Int         @id @default(autoincrement())
+  name       String      @db.VarChar(255)
+  api_key    String
+  store_url  String
+  created_at DateTime?   @default(now()) @db.Timestamp(6)
+  email      String      @unique @db.VarChar(255)
+  password   String
+  customers  customers[]
+  orders     orders[]
+  products   products[]
+}
