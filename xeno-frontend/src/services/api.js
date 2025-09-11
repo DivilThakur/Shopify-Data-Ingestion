@@ -56,8 +56,8 @@ export const authAPI = {
     const response = await api.post(config.ENDPOINTS.AUTH.LOGIN, { email, password });
     return response.data;
   },
-  register: async ({ name, email, password, store_url, api_key }) => {
-    const response = await api.post('/tenants/register', { name, email, password, store_url, api_key });
+  register: async ({ name, email, password, store_url, api_key, webhook_secret }) => {
+    const response = await api.post('/tenants/register', { name, email, password, store_url, api_key, webhook_secret });
     return response.data;
   },
 };

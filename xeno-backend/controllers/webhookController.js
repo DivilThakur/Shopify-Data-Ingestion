@@ -10,30 +10,44 @@ const getTenantId = async (shopDomain) => {
   return tenant?.id || null;
 };
 
-export const verifyShopifyWebhook = (req, res, next) => {
-  const shopifyHmac = req.get("X-Shopify-Hmac-Sha256");
-  const secret = process.env.SHOPIFY_SECRET;
+export const verifyShopifyWebhook = async (req, res, next) => {
+  try {
+    const shopDomain = req.get("X-Shopify-Shop-Domain");
+    const shopifyHmac = req.get("X-Shopify-Hmac-Sha256");
 
-  if (!shopifyHmac || !req.rawBody || !secret) {
-    console.error("Webhook verification failed: Missing elements");
-    return res.status(401).send("Unauthorized");
+    if (!shopDomain || !shopifyHmac || !req.rawBody) {
+      console.error("Webhook verification failed: Missing required headers or body");
+      return res.status(401).send("Unauthorized");
+    }
+
+    
+    const tenant = await prisma.tenants.findFirst({
+      where: { store_url: shopDomain },
+      select: { webhook_secret: true, name: true },
+    });
+
+    if (!tenant || !tenant.webhook_secret) {
+      console.error(`No tenant or webhook secret found for shop: ${shopDomain}`);
+      return res.status(401).send("Unauthorized");
+    }
+
+    const hash = crypto
+      .createHmac("sha256", tenant.webhook_secret)
+      .update(req.rawBody, "utf8")
+      .digest("base64");
+
+    if (hash !== shopifyHmac) {
+      console.error(`Webhook verification failed for ${tenant.name}: HMAC mismatch`);
+      console.log(`Received HMAC: ${shopifyHmac}, Computed HMAC: ${hash}`);
+      return res.status(401).send("Unauthorized");
+    }
+
+    console.log(`Webhook verification passed for ${tenant.name} (${shopDomain})`);
+    next();
+  } catch (err) {
+    console.error("Webhook verification error:", err);
+    res.status(500).send("Internal Server Error");
   }
-
-  const hash = crypto
-    .createHmac("sha256", secret)
-    .update(req.rawBody, "utf8")
-    .digest("base64");
-
-  if (hash !== shopifyHmac) {
-    console.error("Webhook verification failed: HMAC mismatch");
-    console.log(`Received HMAC: ${shopifyHmac}, Computed HMAC: ${hash}`);
-    return res.status(401).send("Unauthorized");
-  }
-
-  console.log(
-    `Webhook verification passed for shop: ${req.get("X-Shopify-Shop-Domain")}`
-  );
-  next();
 };
 
 export const handleCustomerWebhook = async (req, res) => {
@@ -141,7 +155,28 @@ export const handleOrderWebhook = async (req, res) => {
     const orders = Array.isArray(req.body) ? req.body : [req.body];
 
     for (let o of orders) {
-      const { id: shopify_id, total_price } = o;
+      const { id: shopify_id, total_price, customer, customer_id } = o;
+
+      // Find the customer if customer data is provided
+      let localCustomerId = null;
+      const customerShopifyId = customer?.id || customer_id;
+      
+      if (customerShopifyId) {
+        const customerRecord = await prisma.customers.findFirst({
+          where: {
+            tenant_id,
+            shopify_id: customerShopifyId.toString(),
+          },
+          select: { id: true },
+        });
+        localCustomerId = customerRecord?.id || null;
+        
+        if (localCustomerId) {
+          console.log(`Found customer ${localCustomerId} for order ${shopify_id}`);
+        } else {
+          console.log(`No customer found for shopify_id ${customerShopifyId} in order ${shopify_id}`);
+        }
+      }
 
       await prisma.orders.upsert({
         where: {
@@ -150,11 +185,15 @@ export const handleOrderWebhook = async (req, res) => {
             shopify_id: shopify_id.toString(),
           },
         },
-        update: { total_price: parseFloat(total_price) || 0 },
+        update: { 
+          total_price: parseFloat(total_price) || 0,
+          customer_id: localCustomerId,
+        },
         create: {
           tenant_id,
           shopify_id: shopify_id.toString(),
           total_price: parseFloat(total_price) || 0,
+          customer_id: localCustomerId,
         },
       });
     }

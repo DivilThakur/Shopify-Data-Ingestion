@@ -4,13 +4,16 @@ import {
   handleCustomerWebhook,
   handleProductWebhook,
   handleOrderWebhook,
+  handleCartWebhook,
+  handleCheckoutWebhook,
 } from "../controllers/webhookController.js";
 
 const router = express.Router();
 
-
-router.post("/customers", handleCustomerWebhook);
-router.post("/products", handleProductWebhook);
-router.post("/orders", handleOrderWebhook);
+router.post("/customers", verifyShopifyWebhook, handleCustomerWebhook);
+router.post("/products", verifyShopifyWebhook, handleProductWebhook);
+router.post("/orders", verifyShopifyWebhook, handleOrderWebhook);
+router.post("/cart", verifyShopifyWebhook, handleCartWebhook);
+router.post("/checkout", verifyShopifyWebhook, handleCheckoutWebhook);
 
 export default router;

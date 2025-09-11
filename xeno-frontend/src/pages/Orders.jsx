@@ -72,6 +72,22 @@ const Orders = () => {
     return new Date(dateString).toLocaleString();
   };
 
+  const formatINR = (amount) => {
+    try {
+      return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(Number(amount || 0));
+    } catch {
+      return `₹${Number(amount || 0).toLocaleString('en-IN')}`;
+    }
+  };
+
+  const getCustomerName = (customer) => {
+    if (!customer) return '—';
+    const firstName = customer.first_name || '';
+    const lastName = customer.last_name || '';
+    const fullName = `${firstName} ${lastName}`.trim();
+    return fullName || customer.email || 'Unknown Customer';
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -170,7 +186,7 @@ const Orders = () => {
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800" onClick={() => handleSort('total_price')}>
                   <div className="flex items-center">
-                    Total
+                    Total (INR)
                     {sortField === 'total_price' && (<span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>)}
                   </div>
                 </th>
@@ -180,6 +196,7 @@ const Orders = () => {
                     {sortField === 'created_at' && (<span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>)}
                   </div>
                 </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Customer Name</th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Shopify ID</th>
               </tr>
             </thead>
@@ -194,11 +211,11 @@ const Orders = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center text-sm text-gray-900 dark:text-gray-100">
-                      <DollarSign className="h-4 w-4 mr-1 text-gray-400" />
-                      <span className="font-medium">${Number(order.total_price || 0).toLocaleString()}</span>
+                      <span className="font-medium">{formatINR(order.total_price)}</span>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{formatDate(order.created_at)}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{getCustomerName(order.customers)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{order.shopify_id || '—'}</td>
                 </tr>
               ))}

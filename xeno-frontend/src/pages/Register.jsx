@@ -13,7 +13,8 @@ const Register = () => {
     email: '',
     password: '',
     store_url: '',
-    api_key: ''
+    api_key: '',
+    webhook_secret: ''
   });
   const [loading, setLoading] = useState(false);
 
@@ -26,15 +27,15 @@ const Register = () => {
     e.preventDefault();
     setLoading(true);
 
-    const { name, email, password, store_url, api_key } = formData;
-    if (!name || !email || !password || !store_url || !api_key) {
+    const { name, email, password, store_url, api_key, webhook_secret } = formData;
+    if (!name || !email || !password || !store_url || !api_key || !webhook_secret) {
       toast.error('All fields are required');
       setLoading(false);
       return;
     }
 
     try {
-      await authAPI.register({ name, email, password, store_url, api_key });
+      await authAPI.register({ name, email, password, store_url, api_key, webhook_secret });
       toast.success('Tenant registered successfully');
       setTimeout(() => navigate('/login'), 700);
     } catch (err) {
@@ -135,6 +136,19 @@ const Register = () => {
                   className="appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   placeholder="Shopify API Key"
                   value={formData.api_key}
+                  onChange={handleChange}
+                />
+              </div>
+              <div>
+                <label htmlFor="webhook_secret" className="sr-only">Webhook Secret</label>
+                <input
+                  id="webhook_secret"
+                  name="webhook_secret"
+                  type="password"
+                  required
+                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder="Shopify Webhook Secret"
+                  value={formData.webhook_secret}
                   onChange={handleChange}
                 />
               </div>
