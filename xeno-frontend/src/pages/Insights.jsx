@@ -52,10 +52,9 @@ const Insights = () => {
     );
   }
 
-  // Aggregate orders by month for the chart
   const revenueData = orders.reduce((acc, order) => {
     const date = new Date(order.created_at);
-    const month = date.toLocaleString("default", { month: "short" }); // "Jan", "Feb", etc.
+    const month = date.toLocaleString("default", { month: "short" });
 
     if (!acc[month]) {
       acc[month] = { month, revenue: 0, orders: 0 };
@@ -69,7 +68,6 @@ const Insights = () => {
 
   const revenueArray = Object.values(revenueData);
 
-  // Stats cards
   const stats = [
     {
       name: "Total Customers",
@@ -85,7 +83,7 @@ const Insights = () => {
     },
     {
       name: "Total Revenue",
-      value: `$${Number(insights?.totalRevenue || 0).toLocaleString()}`,
+      value: `₹${Number(insights?.totalRevenue || 0).toFixed(2)}`,
       icon: DollarSign,
       color: "bg-yellow-500",
     },
@@ -151,21 +149,37 @@ const Insights = () => {
       </div>
 
       {/* Revenue & Orders Trend Chart */}
-      <div className="bg-white p-6 rounded-lg shadow">
+      <div className="bg-white p-4 rounded-lg shadow">
+        {" "}
+        {/* reduced padding */}
         <h3 className="text-lg font-medium text-gray-900 mb-4">
           Revenue & Orders Trend
         </h3>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={revenueArray}>
+          <LineChart
+            data={revenueArray}
+            margin={{ top: 5, right: 10, left: 20, bottom: 5 }}
+          >
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" />
-            <YAxis />
-            <Tooltip />
+            <YAxis
+              tickFormatter={(value) => Number(value).toFixed(2)}
+              width={60}
+            />
+            <Tooltip
+              formatter={(value, name) => {
+                if (name?.includes("Revenue")) {
+                  return [`₹${(+value).toFixed(3)}`, "Revenue"];
+                }
+                return [value, name];
+              }}
+            />
+
             <Line
               type="monotone"
               dataKey="revenue"
               stroke="#3B82F6"
-              name="Revenue ($)"
+              name="Revenue"
             />
             <Line
               type="monotone"
@@ -213,8 +227,7 @@ const Insights = () => {
                         </div>
                         <div className="flex-shrink-0 text-right">
                           <p className="text-sm font-medium text-gray-900">
-                            $
-                            {Number(customer.total_spent || 0).toLocaleString()}
+                            ₹{Number(customer.total_spent || 0).toFixed(2)}
                           </p>
                         </div>
                       </div>

@@ -1,83 +1,130 @@
-import prisma from "../prismaClient.js";
+import { PrismaClient } from "@prisma/client";
+import { faker } from "@faker-js/faker";
 
-// Generate a random past date within the last `minutesAgoMax` minutes
-function randomPastDate(minutesAgoMax = 15) {
-  const date = new Date();
-  const pastMinutes = Math.floor(Math.random() * minutesAgoMax);
-  date.setMinutes(date.getMinutes() - pastMinutes);
-  return date;
+const prisma = new PrismaClient();
+
+// Helper function: random date in the past 'daysBack' days
+function randomPastDate(daysBack = 60) {
+  const today = new Date();
+  const past = new Date();
+  past.setDate(today.getDate() - daysBack);
+  return new Date(
+    past.getTime() + Math.random() * (today.getTime() - past.getTime())
+  );
 }
 
 async function main() {
-  const tenantId = 5; // Use your tenant ID
+  const tenantId = 2; // <-- Replace with your tenant ID
 
-  // 1️⃣ Seed 5 customers
+  // Seed Customers
   const customers = [];
-  for (let i = 1; i <= 5; i++) {
-    const customer = await prisma.customers.upsert({
-      where: {
-        tenant_id_shopify_id: {
-          tenant_id: tenantId,
-          shopify_id: `customer_${i}`,
-        },
-      },
-      update: {},
-      create: {
+  for (let i = 0; i < 5; i++) {
+    const firstName = faker.person.firstName();
+    const lastName = faker.person.lastName();
+    const customer = await prisma.customers.create({
+      data: {
         tenant_id: tenantId,
-        shopify_id: `customer_${i}`,
-        email: `customer${i}@test.com`,
-        first_name: `Customer${i}`,
-        last_name: `Test`,
-        total_spent: 0,
+        shopify_id: faker.string.uuid(),
+        email: faker.internet.email({ firstName, lastName }),
+        first_name: firstName,
+        last_name: lastName,
+        total_spent: faker.number.float({
+          min: 100,
+          max: 1000,
+          precision: 0.01,
+        }),
+        created_at: randomPastDate(60),
       },
     });
     customers.push(customer);
   }
 
-  // 2️⃣ Seed 50 carts
+  // Seed Products
+  const products = [];
+  for (let i = 0; i < 10; i++) {
+    const product = await prisma.products.create({
+      data: {
+        tenant_id: tenantId,
+        shopify_id: faker.string.uuid(),
+        title: faker.commerce.productName(),
+        price: faker.number.float({ min: 50, max: 5000, precision: 0.01 }),
+        created_at: randomPastDate(60),
+      },
+    });
+    products.push(product);
+  }
+
+  // Seed Orders (random customer)
+  for (let i = 0; i < 15; i++) {
+    const randomCustomer =
+      customers[Math.floor(Math.random() * customers.length)];
+    await prisma.orders.create({
+      data: {
+        tenant_id: tenantId,
+        shopify_id: faker.string.uuid(),
+        customer_id: randomCustomer.id,
+        total_price: faker.number.float({
+          min: 100,
+          max: 10000,
+          precision: 0.01,
+        }),
+        status: "PENDING",
+        created_at: randomPastDate(60),
+      },
+    });
+  }
+
+  // Seed Carts
   const cartStatuses = ["ACTIVE", "ABANDONED", "COMPLETED"];
-  const cartData = [];
-  for (let i = 1; i <= 50; i++) {
-    const customer = customers[Math.floor(Math.random() * customers.length)];
-    cartData.push({
-      tenant_id: tenantId,
-      shopify_id: `cart_${i}`,
-      customer_id: customer.id,
-      total_price: Math.floor(Math.random() * 500) + 50, // 50 - 550
-      status: cartStatuses[Math.floor(Math.random() * cartStatuses.length)],
-      created_at: randomPastDate(120), // within last 2 hours
+  for (let i = 0; i < 50; i++) {
+    const randomCustomer =
+      customers[Math.floor(Math.random() * customers.length)];
+    await prisma.carts.create({
+      data: {
+        tenant_id: tenantId,
+        shopify_id: faker.string.uuid(),
+        customer_id: randomCustomer.id,
+        total_price: faker.number.float({
+          min: 50,
+          max: 5000,
+          precision: 0.01,
+        }),
+        status: cartStatuses[Math.floor(Math.random() * cartStatuses.length)],
+        created_at: randomPastDate(60),
+      },
     });
   }
-  await prisma.carts.createMany({ data: cartData, skipDuplicates: true });
 
-  // 3️⃣ Seed 50 checkouts
+  // Seed Checkouts
   const checkoutStatuses = ["STARTED", "ABANDONED", "COMPLETED"];
-  const checkoutData = [];
-  for (let i = 1; i <= 50; i++) {
-    const customer = customers[Math.floor(Math.random() * customers.length)];
-    checkoutData.push({
-      tenant_id: tenantId,
-      shopify_id: `checkout_${i}`,
-      customer_id: customer.id,
-      total_price: Math.floor(Math.random() * 1000) + 100,
-      status:
-        checkoutStatuses[Math.floor(Math.random() * checkoutStatuses.length)],
-      created_at: randomPastDate(120), 
+  for (let i = 0; i < 40; i++) {
+    const randomCustomer =
+      customers[Math.floor(Math.random() * customers.length)];
+    await prisma.checkouts.create({
+      data: {
+        tenant_id: tenantId,
+        shopify_id: faker.string.uuid(),
+        customer_id: randomCustomer.id,
+        total_price: faker.number.float({
+          min: 50,
+          max: 5000,
+          precision: 0.01,
+        }),
+        status:
+          checkoutStatuses[Math.floor(Math.random() * checkoutStatuses.length)],
+        created_at: randomPastDate(60),
+      },
     });
   }
-  await prisma.checkouts.createMany({
-    data: checkoutData,
-    skipDuplicates: true,
-  });
 
-  console.log(
-    "✅ Seeded customers, carts, and checkouts with past timestamps!"
-  );
+  console.log("Seeding finished ✅");
 }
 
-
 main()
-  .catch((e) => console.error(e))
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
   .finally(async () => {
     await prisma.$disconnect();
   });
