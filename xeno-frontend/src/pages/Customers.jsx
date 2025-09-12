@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { dataAPI } from '../services/api';
-import { ChevronLeft, ChevronRight, Search, Mail } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { dataAPI } from "../services/api";
+import { ChevronLeft, ChevronRight, Search, Mail } from "lucide-react";
 
 const Customers = () => {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortField, setSortField] = useState('name');
-  const [sortDirection, setSortDirection] = useState('asc');
+  const [sortField, setSortField] = useState("name");
+  const [sortDirection, setSortDirection] = useState("asc");
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -18,8 +18,8 @@ const Customers = () => {
         const data = await dataAPI.getCustomers();
         setCustomers(Array.isArray(data) ? data : []);
       } catch (err) {
-        setError('Failed to load customers');
-        console.error('Error fetching customers:', err);
+        setError("Failed to load customers");
+        console.error("Error fetching customers:", err);
       } finally {
         setLoading(false);
       }
@@ -29,37 +29,40 @@ const Customers = () => {
   }, []);
 
   const getDisplayName = (c) => {
-    const first = c.first_name?.trim() || '';
-    const last = c.last_name?.trim() || '';
+    const first = c.first_name?.trim() || "";
+    const last = c.last_name?.trim() || "";
     const full = `${first} ${last}`.trim();
-    return full || c.email || 'Unknown Customer';
+    return full || c.email || "Unknown Customer";
   };
 
   const handleSort = (field) => {
     if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
       setSortField(field);
-      setSortDirection('asc');
+      setSortDirection("asc");
     }
   };
 
   const filteredCustomers = customers
-    .filter(customer => {
+    .filter((customer) => {
       const name = getDisplayName(customer).toLowerCase();
-      const email = (customer.email || '').toLowerCase();
-      return name.includes(searchTerm.toLowerCase()) || email.includes(searchTerm.toLowerCase());
+      const email = (customer.email || "").toLowerCase();
+      return (
+        name.includes(searchTerm.toLowerCase()) ||
+        email.includes(searchTerm.toLowerCase())
+      );
     })
     .sort((a, b) => {
       let aValue;
       let bValue;
-      if (sortField === 'name') {
+      if (sortField === "name") {
         aValue = getDisplayName(a).toLowerCase();
         bValue = getDisplayName(b).toLowerCase();
-      } else if (sortField === 'email') {
-        aValue = (a.email || '').toLowerCase();
-        bValue = (b.email || '').toLowerCase();
-      } else if (sortField === 'total_spent') {
+      } else if (sortField === "email") {
+        aValue = (a.email || "").toLowerCase();
+        bValue = (b.email || "").toLowerCase();
+      } else if (sortField === "total_spent") {
         aValue = Number(a.total_spent || 0);
         bValue = Number(b.total_spent || 0);
       } else {
@@ -67,7 +70,7 @@ const Customers = () => {
         bValue = 0;
       }
 
-      if (sortDirection === 'asc') {
+      if (sortDirection === "asc") {
         return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
       } else {
         return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
@@ -76,7 +79,10 @@ const Customers = () => {
 
   const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedCustomers = filteredCustomers.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedCustomers = filteredCustomers.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
 
   if (loading) {
     return (
@@ -130,32 +136,62 @@ const Customers = () => {
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-900">
               <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800" onClick={() => handleSort('name')}>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+                  onClick={() => handleSort("name")}
+                >
                   <div className="flex items-center">
                     Name
-                    {sortField === 'name' && (<span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>)}
+                    {sortField === "name" && (
+                      <span className="ml-1">
+                        {sortDirection === "asc" ? "↑" : "↓"}
+                      </span>
+                    )}
                   </div>
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800" onClick={() => handleSort('email')}>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+                  onClick={() => handleSort("email")}
+                >
                   <div className="flex items-center">
                     Email
-                    {sortField === 'email' && (<span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>)}
+                    {sortField === "email" && (
+                      <span className="ml-1">
+                        {sortDirection === "asc" ? "↑" : "↓"}
+                      </span>
+                    )}
                   </div>
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800" onClick={() => handleSort('total_spent')}>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+                  onClick={() => handleSort("total_spent")}
+                >
                   <div className="flex items-center">
                     Total Spent
-                    {sortField === 'total_spent' && (<span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>)}
+                    {sortField === "total_spent" && (
+                      <span className="ml-1">
+                        {sortDirection === "asc" ? "↑" : "↓"}
+                      </span>
+                    )}
                   </div>
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                >
                   IDs
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {paginatedCustomers.map((customer) => (
-                <tr key={customer.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/40">
+                <tr
+                  key={customer.id}
+                  className="hover:bg-gray-50 dark:hover:bg-gray-900/40"
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10">
@@ -175,16 +211,18 @@ const Customers = () => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center text-sm text-gray-900 dark:text-gray-100">
                       <Mail className="h-4 w-4 mr-2 text-gray-400" />
-                      {customer.email || 'No email'}
+                      {customer.email || "No email"}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                    ${Number(customer.total_spent || 0).toLocaleString()}
+                    ₹{Number(customer.total_spent || 0).toLocaleString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400">
                     <div className="space-y-1">
                       <div>id: {customer.id}</div>
-                      {customer.shopify_id && <div>shopify_id: {customer.shopify_id}</div>}
+                      {customer.shopify_id && (
+                        <div>shopify_id: {customer.shopify_id}</div>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -198,22 +236,52 @@ const Customers = () => {
             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm text-gray-700 dark:text-gray-300">
-                  Showing <span className="font-medium">{startIndex + 1}</span> to{' '}
-                  <span className="font-medium">{Math.min(startIndex + itemsPerPage, filteredCustomers.length)}</span> of{' '}
-                  <span className="font-medium">{filteredCustomers.length}</span> results
+                  Showing <span className="font-medium">{startIndex + 1}</span>{" "}
+                  to{" "}
+                  <span className="font-medium">
+                    {Math.min(
+                      startIndex + itemsPerPage,
+                      filteredCustomers.length
+                    )}
+                  </span>{" "}
+                  of{" "}
+                  <span className="font-medium">
+                    {filteredCustomers.length}
+                  </span>{" "}
+                  results
                 </p>
               </div>
               <div>
                 <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                  <button onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1} className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed">
+                  <button
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
                     <ChevronLeft className="h-5 w-5" />
                   </button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                    <button key={page} onClick={() => setCurrentPage(page)} className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${page === currentPage ? 'z-10 bg-blue-50 dark:bg-blue-900/30 border-blue-500 text-blue-600 dark:text-blue-200' : 'bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'}`}>
-                      {page}
-                    </button>
-                  ))}
-                  <button onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages} className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (page) => (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                          page === currentPage
+                            ? "z-10 bg-blue-50 dark:bg-blue-900/30 border-blue-500 text-blue-600 dark:text-blue-200"
+                            : "bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    )
+                  )}
+                  <button
+                    onClick={() =>
+                      setCurrentPage(Math.min(totalPages, currentPage + 1))
+                    }
+                    disabled={currentPage === totalPages}
+                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
                     <ChevronRight className="h-5 w-5" />
                   </button>
                 </nav>

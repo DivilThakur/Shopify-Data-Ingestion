@@ -152,6 +152,7 @@ export const handleOrderWebhook = async (req, res) => {
   try {
     const shopDomain = req.get("X-Shopify-Shop-Domain");
     const tenant_id = await getTenantId(shopDomain);
+    const topic = req.get("X-Shopify-Topic"); // e.g., orders/create, orders/paid
 
     if (!tenant_id) {
       console.error("No tenant found for shop:", shopDomain);
@@ -163,32 +164,29 @@ export const handleOrderWebhook = async (req, res) => {
     for (let o of orders) {
       const { id: shopify_id, total_price, customer, customer_id } = o;
 
-      // Find the customer if customer data is provided
+      // Map Shopify topic → internal status
+      let status = "PENDING";
+      if (topic.includes("paid") || topic.includes("fulfilled")) {
+        status = "COMPLETED";
+      } else if (topic.includes("cancelled")) {
+        status = "CANCELED";
+      } else if (topic.includes("refunded")) {
+        status = "REFUNDED";
+      }
+
+      // Find customer
       let localCustomerId = null;
       const customerShopifyId = customer?.id || customer_id;
-
       if (customerShopifyId) {
         const customerRecord = await prisma.customers.findFirst({
-          where: {
-            tenant_id,
-            shopify_id: customerShopifyId.toString(),
-          },
+          where: { tenant_id, shopify_id: customerShopifyId.toString() },
           select: { id: true },
         });
         localCustomerId = customerRecord?.id || null;
-
-        if (localCustomerId) {
-          console.log(
-            `Found customer ${localCustomerId} for order ${shopify_id}`
-          );
-        } else {
-          console.log(
-            `No customer found for shopify_id ${customerShopifyId} in order ${shopify_id}`
-          );
-        }
       }
 
-      await prisma.orders.upsert({
+      // Upsert order
+      const order = await prisma.orders.upsert({
         where: {
           tenant_id_shopify_id: {
             tenant_id,
@@ -198,14 +196,26 @@ export const handleOrderWebhook = async (req, res) => {
         update: {
           total_price: parseFloat(total_price) || 0,
           customer_id: localCustomerId,
+          status,
         },
         create: {
-          tenant_id,
+          tenants: { connect: { id: tenant_id } },
           shopify_id: shopify_id.toString(),
           total_price: parseFloat(total_price) || 0,
-          customer_id: localCustomerId,
+          status,
+          ...(localCustomerId
+            ? { customers: { connect: { id: localCustomerId } } }
+            : {}),
         },
       });
+
+      // ✅ Update customer's total_spent if order is COMPLETED
+      if (status === "COMPLETED" && localCustomerId) {
+        await prisma.customers.update({
+          where: { id: localCustomerId },
+          data: { total_spent: { increment: parseFloat(total_price) || 0 } },
+        });
+      }
     }
 
     console.log(`Processed ${orders.length} order(s) for tenant ${tenant_id}`);
@@ -213,5 +223,130 @@ export const handleOrderWebhook = async (req, res) => {
   } catch (err) {
     console.error("Order webhook error:", err);
     res.status(500).send("Internal Server Error");
+  }
+};
+
+export const handleCartWebhook = async (req, res) => {
+  try {
+    const shopDomain = req.get("X-Shopify-Shop-Domain");
+    if (!shopDomain) {
+      console.error("Missing X-Shopify-Shop-Domain header");
+      return res.status(400).send("Missing shop domain");
+    }
+
+    // Fetch tenant ID safely
+    const tenantIdFromHeader = Number(req.headers["x-tenant-id"]);
+    const tenantId = tenantIdFromHeader || (await getTenantId(shopDomain));
+
+    if (!tenantId) {
+      console.error("Invalid or missing tenant ID for shop:", shopDomain);
+      return res.status(400).send("Invalid tenant");
+    }
+
+    const { id: shopifyCartId, customer_id, total_price } = req.body;
+
+    if (!shopifyCartId) {
+      console.error("Missing cart ID in webhook payload");
+      return res.status(400).send("Missing cart ID");
+    }
+
+    const topic = req.get("X-Shopify-Topic"); // carts/create, carts/update, carts/abandoned
+
+    // Determine cart status based on topic
+    let status = "ACTIVE";
+    if (topic?.includes("abandoned")) status = "ABANDONED";
+    else if (topic?.includes("completed")) status = "COMPLETED";
+
+    // Ensure total_price is a number (fallback to 0)
+    const safeTotalPrice = parseFloat(total_price) || 0;
+
+    // Upsert cart
+    await prisma.carts.upsert({
+      where: {
+        tenant_id_shopify_id: {
+          tenant_id: tenantId,
+          shopify_id: String(shopifyCartId),
+        },
+      },
+      update: { total_price: safeTotalPrice, status },
+      create: {
+        tenant_id: tenantId,
+        shopify_id: String(shopifyCartId),
+        customer_id: customer_id ? Number(customer_id) : null,
+        total_price: safeTotalPrice,
+        status,
+      },
+    });
+
+    console.log(
+      `Cart ${shopifyCartId} processed as ${status} for tenant ${tenantId}`
+    );
+    res.status(200).send(`Cart ${status} webhook processed`);
+  } catch (err) {
+    console.error("Cart webhook error:", err);
+    res.status(500).send("Error processing cart webhook");
+  }
+};
+
+export const handleCheckoutWebhook = async (req, res) => {
+  try {
+    const shopDomain = req.get("X-Shopify-Shop-Domain");
+    if (!shopDomain) {
+      console.error("Missing X-Shopify-Shop-Domain header");
+      return res.status(400).send("Missing shop domain");
+    }
+
+    // Fetch tenant ID safely
+    const tenantIdFromHeader = Number(req.headers["x-tenant-id"]);
+    const tenantId = tenantIdFromHeader || (await getTenantId(shopDomain));
+
+    if (!tenantId) {
+      console.error("Invalid or missing tenant ID for shop:", shopDomain);
+      return res.status(400).send("Invalid tenant");
+    }
+
+    const { id: shopifyCheckoutId, customer_id, total_price } = req.body;
+
+    if (!shopifyCheckoutId) {
+      console.error("Missing checkout ID in webhook payload");
+      return res.status(400).send("Missing checkout ID");
+    }
+
+    const topic = req.get("X-Shopify-Topic"); // checkouts/create, checkouts/update, checkouts/abandoned
+
+    // Determine checkout status
+    let status = "STARTED";
+    if (topic?.includes("abandoned")) status = "ABANDONED";
+    else if (topic?.includes("completed") || topic?.includes("paid"))
+      status = "COMPLETED";
+
+    // Ensure total_price is a number
+    const safeTotalPrice = parseFloat(total_price) || 0;
+
+    // Upsert checkout
+    await prisma.checkouts.upsert({
+      where: {
+        tenant_id_shopify_id: {
+          tenant_id: tenantId,
+          shopify_id: String(shopifyCheckoutId),
+        },
+      },
+      update: { total_price: safeTotalPrice, status },
+      create: {
+        tenant_id: tenantId,
+        shopify_id: String(shopifyCheckoutId),
+        customer_id: customer_id ? Number(customer_id) : null,
+        total_price: safeTotalPrice,
+        status,
+      },
+    });
+
+    console.log(
+      `Checkout ${shopifyCheckoutId} processed as ${status} for tenant ${tenantId}`
+    );
+    res.status(200).send(`Checkout ${status} webhook processed`);
+  } catch (err) {
+    console.error("Checkout webhook error:", err);
+    res.status(500).send("Error processing checkout webhook");
   }
 };
