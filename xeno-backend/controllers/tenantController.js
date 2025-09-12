@@ -4,11 +4,18 @@ import prisma from "../prismaClient.js";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
-
 export const registerTenant = async (req, res) => {
   try {
-    const { name, email, password, store_url, api_key, webhook_secret } = req.body;
-    if (!name || !email || !password || !store_url || !api_key || !webhook_secret) {
+    const { name, email, password, store_url, api_key, webhook_secret } =
+      req.body;
+    if (
+      !name ||
+      !email ||
+      !password ||
+      !store_url ||
+      !api_key ||
+      !webhook_secret
+    ) {
       return res.status(400).json({ error: "All fields are required" });
     }
 
@@ -21,7 +28,14 @@ export const registerTenant = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const tenant = await prisma.tenants.create({
-      data: { name, email, password: hashedPassword, store_url, api_key, webhook_secret },
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        store_url,
+        api_key,
+        webhook_secret,
+      },
     });
 
     res.status(201).json({
@@ -37,7 +51,6 @@ export const registerTenant = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-
 
 export const loginTenant = async (req, res) => {
   try {

@@ -1,6 +1,5 @@
 import prisma from "../prismaClient.js";
 
-
 export const ingestCustomers = async (req, res) => {
   try {
     const { tenant_id, customers } = req.body;
@@ -37,7 +36,6 @@ export const ingestCustomers = async (req, res) => {
   }
 };
 
-
 export const ingestProducts = async (req, res) => {
   try {
     const { tenant_id, products } = req.body;
@@ -66,7 +64,6 @@ export const ingestProducts = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-
 
 export const ingestOrders = async (req, res) => {
   try {

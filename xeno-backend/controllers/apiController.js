@@ -61,8 +61,9 @@ export const getInsightsApi = async (req, res) => {
   try {
     const tenant_id = req.tenant.tenant_id;
 
-    
-    const total_customers = await prisma.customers.count({ where: { tenant_id } });
+    const total_customers = await prisma.customers.count({
+      where: { tenant_id },
+    });
 
     const orderAgg = await prisma.orders.aggregate({
       _count: { id: true },
@@ -70,28 +71,24 @@ export const getInsightsApi = async (req, res) => {
       where: { tenant_id },
     });
 
-  
     const top_customers = await prisma.customers.findMany({
       where: { tenant_id },
       orderBy: { total_spent: "desc" },
       take: 5,
     });
 
- 
     const cartStats = await prisma.carts.groupBy({
       by: ["status"],
       where: { tenant_id },
       _count: { status: true },
     });
 
-    
     const checkoutStats = await prisma.checkouts.groupBy({
       by: ["status"],
       where: { tenant_id },
       _count: { status: true },
     });
 
-    
     const cartSummary = cartStats.reduce((acc, cur) => {
       acc[cur.status] = cur._count.status;
       return acc;
@@ -107,8 +104,8 @@ export const getInsightsApi = async (req, res) => {
       total_orders: orderAgg._count.id,
       total_revenue: orderAgg._sum.total_price || 0,
       top_customers,
-      cart_summary: cartSummary,          
-      checkout_summary: checkoutSummary,  
+      cart_summary: cartSummary,
+      checkout_summary: checkoutSummary,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });

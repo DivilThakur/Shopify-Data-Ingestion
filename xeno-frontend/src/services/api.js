@@ -3,7 +3,6 @@ import { config } from "../config/config";
 
 const API_BASE_URL = config.API_BASE_URL;
 
-
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -20,7 +19,6 @@ const isAuthEndpoint = (url = "") => {
   }
 };
 
-
 api.interceptors.request.use(
   (requestConfig) => {
     if (!isAuthEndpoint(requestConfig.url)) {
@@ -33,7 +31,6 @@ api.interceptors.request.use(
   },
   (error) => Promise.reject(error)
 );
-
 
 api.interceptors.response.use(
   (response) => response,
@@ -49,7 +46,6 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
 
 export const authAPI = {
   login: async (email, password) => {
@@ -79,20 +75,17 @@ export const authAPI = {
   },
 };
 
-
 export const dataAPI = {
   getCustomers: async () => {
     const response = await api.get(config.ENDPOINTS.API.CUSTOMERS);
     return response.data?.customers ?? [];
   },
 
-
   getProducts: async () => {
     const response = await api.get(config.ENDPOINTS.API.PRODUCTS);
     return response.data?.products ?? [];
   },
 
-  
   getOrders: async (from = "", to = "") => {
     const params = new URLSearchParams();
     if (from) params.append("from", from);
@@ -101,11 +94,10 @@ export const dataAPI = {
     const response = await api.get(
       `${config.ENDPOINTS.API.ORDERS}?${params.toString()}`
     );
-    
+
     return response.data?.orders ?? [];
   },
 
- 
   getInsights: async () => {
     const response = await api.get(config.ENDPOINTS.API.INSIGHTS);
     const data = response.data || {};
@@ -114,8 +106,8 @@ export const dataAPI = {
       totalOrders: data.total_orders ?? 0,
       totalRevenue: data.total_revenue ?? 0,
       topCustomers: Array.isArray(data.top_customers) ? data.top_customers : [],
-      cartSummary: data.cart_summary || {}, 
-      checkoutSummary: data.checkout_summary || {}, 
+      cartSummary: data.cart_summary || {},
+      checkoutSummary: data.checkout_summary || {},
     };
   },
 };

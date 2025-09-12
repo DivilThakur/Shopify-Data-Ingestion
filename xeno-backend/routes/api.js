@@ -4,7 +4,6 @@ import {
   getProductsApi,
   getOrdersApi,
   getInsightsApi,
-
 } from "../controllers/apiController.js";
 import { authenticate } from "../middleware/authMiddlware.js";
 const router = express.Router();

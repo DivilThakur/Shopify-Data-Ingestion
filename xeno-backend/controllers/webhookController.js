@@ -152,7 +152,7 @@ export const handleOrderWebhook = async (req, res) => {
   try {
     const shopDomain = req.get("X-Shopify-Shop-Domain");
     const tenant_id = await getTenantId(shopDomain);
-    const topic = req.get("X-Shopify-Topic"); 
+    const topic = req.get("X-Shopify-Topic");
 
     if (!tenant_id) {
       console.error("No tenant found for shop:", shopDomain);
@@ -164,7 +164,6 @@ export const handleOrderWebhook = async (req, res) => {
     for (let o of orders) {
       const { id: shopify_id, total_price, customer, customer_id } = o;
 
-     
       let status = "PENDING";
       if (topic.includes("paid") || topic.includes("fulfilled")) {
         status = "COMPLETED";
@@ -174,7 +173,6 @@ export const handleOrderWebhook = async (req, res) => {
         status = "REFUNDED";
       }
 
-      
       let localCustomerId = null;
       const customerShopifyId = customer?.id || customer_id;
       if (customerShopifyId) {
@@ -185,7 +183,6 @@ export const handleOrderWebhook = async (req, res) => {
         localCustomerId = customerRecord?.id || null;
       }
 
-      
       const order = await prisma.orders.upsert({
         where: {
           tenant_id_shopify_id: {
@@ -254,15 +251,12 @@ export const handleCartWebhook = async (req, res) => {
 
     const topic = req.get("X-Shopify-Topic");
 
-   
     let status = "ACTIVE";
     if (topic?.includes("abandoned")) status = "ABANDONED";
     else if (topic?.includes("completed")) status = "COMPLETED";
 
-  
     const safeTotalPrice = parseFloat(total_price) || 0;
 
-    
     await prisma.carts.upsert({
       where: {
         tenant_id_shopify_id: {
@@ -298,7 +292,7 @@ export const handleCheckoutWebhook = async (req, res) => {
       return res.status(400).send("Missing shop domain");
     }
 
-   const tenantId = await getTenantId(shopDomain);
+    const tenantId = await getTenantId(shopDomain);
 
     if (!tenantId) {
       console.error("Invalid or missing tenant ID for shop:", shopDomain);
@@ -312,18 +306,15 @@ export const handleCheckoutWebhook = async (req, res) => {
       return res.status(400).send("Missing checkout ID");
     }
 
-    const topic = req.get("X-Shopify-Topic"); 
+    const topic = req.get("X-Shopify-Topic");
 
-    
     let status = "STARTED";
     if (topic?.includes("abandoned")) status = "ABANDONED";
     else if (topic?.includes("completed") || topic?.includes("paid"))
       status = "COMPLETED";
 
-    
     const safeTotalPrice = parseFloat(total_price) || 0;
 
-    
     await prisma.checkouts.upsert({
       where: {
         tenant_id_shopify_id: {

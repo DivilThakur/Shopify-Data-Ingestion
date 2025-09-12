@@ -1,24 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { dataAPI } from '../services/api';
-import { Search, Calendar, ShoppingCart, DollarSign } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { dataAPI } from "../services/api";
+import { Search, Calendar, ShoppingCart, DollarSign } from "lucide-react";
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
-  const [sortField, setSortField] = useState('created_at');
-  const [sortDirection, setSortDirection] = useState('desc');
+  const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [sortField, setSortField] = useState("created_at");
+  const [sortDirection, setSortDirection] = useState("desc");
 
   const fetchOrders = async () => {
     try {
       const data = await dataAPI.getOrders(dateFrom, dateTo);
       setOrders(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError('Failed to load orders');
-      console.error('Error fetching orders:', err);
+      setError("Failed to load orders");
+      console.error("Error fetching orders:", err);
     } finally {
       setLoading(false);
     }
@@ -35,31 +35,34 @@ const Orders = () => {
 
   const handleSort = (field) => {
     if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
       setSortField(field);
-      setSortDirection('asc');
+      setSortDirection("asc");
     }
   };
 
   const filteredOrders = orders
-    .filter(order => {
-      const idText = (order.id || '').toString().toLowerCase();
-      const shopifyIdText = (order.shopify_id || '').toString().toLowerCase();
-      return idText.includes(searchTerm.toLowerCase()) || shopifyIdText.includes(searchTerm.toLowerCase());
+    .filter((order) => {
+      const idText = (order.id || "").toString().toLowerCase();
+      const shopifyIdText = (order.shopify_id || "").toString().toLowerCase();
+      return (
+        idText.includes(searchTerm.toLowerCase()) ||
+        shopifyIdText.includes(searchTerm.toLowerCase())
+      );
     })
     .sort((a, b) => {
       let aValue = a[sortField];
       let bValue = b[sortField];
-      if (sortField === 'total_price') {
+      if (sortField === "total_price") {
         aValue = Number(a.total_price || 0);
         bValue = Number(b.total_price || 0);
       }
-      if (sortField === 'created_at') {
+      if (sortField === "created_at") {
         aValue = new Date(a.created_at || 0).getTime();
         bValue = new Date(b.created_at || 0).getTime();
       }
-      if (sortDirection === 'asc') {
+      if (sortDirection === "asc") {
         return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
       } else {
         return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
@@ -67,24 +70,28 @@ const Orders = () => {
     });
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
+    if (!dateString) return "N/A";
     return new Date(dateString).toLocaleString();
   };
 
   const formatINR = (amount) => {
     try {
-      return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(Number(amount || 0));
+      return new Intl.NumberFormat("en-IN", {
+        style: "currency",
+        currency: "INR",
+        maximumFractionDigits: 2,
+      }).format(Number(amount || 0));
     } catch {
-      return `₹${Number(amount || 0).toLocaleString('en-IN')}`;
+      return `₹${Number(amount || 0).toLocaleString("en-IN")}`;
     }
   };
 
   const getCustomerName = (customer) => {
-    if (!customer) return '—';
-    const firstName = customer.first_name || '';
-    const lastName = customer.last_name || '';
+    if (!customer) return "—";
+    const firstName = customer.first_name || "";
+    const lastName = customer.last_name || "";
     const fullName = `${firstName} ${lastName}`.trim();
-    return fullName || customer.email || 'Unknown Customer';
+    return fullName || customer.email || "Unknown Customer";
   };
 
   if (loading) {
@@ -109,7 +116,12 @@ const Orders = () => {
         <div className="px-4 py-5 sm:p-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div>
-              <label htmlFor="search" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Search Orders (by id or shopify_id)</label>
+              <label
+                htmlFor="search"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                Search Orders (by id or shopify_id)
+              </label>
               <div className="mt-1 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Search className="h-5 w-5 text-gray-400" />
@@ -126,7 +138,12 @@ const Orders = () => {
             </div>
 
             <div>
-              <label htmlFor="dateFrom" className="block text-sm font-medium text-gray-700 dark:text-gray-300">From Date</label>
+              <label
+                htmlFor="dateFrom"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                From Date
+              </label>
               <div className="mt-1 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Calendar className="h-5 w-5 text-gray-400" />
@@ -142,7 +159,12 @@ const Orders = () => {
             </div>
 
             <div>
-              <label htmlFor="dateTo" className="block text-sm font-medium text-gray-700 dark:text-gray-300">To Date</label>
+              <label
+                htmlFor="dateTo"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                To Date
+              </label>
               <div className="mt-1 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Calendar className="h-5 w-5 text-gray-400" />
@@ -171,51 +193,100 @@ const Orders = () => {
 
       <div className="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-md">
         <div className="px-4 py-5 sm:p-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100 mb-4">Orders ({filteredOrders.length})</h3>
+          <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100 mb-4">
+            Orders ({filteredOrders.length})
+          </h3>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-900">
               <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800" onClick={() => handleSort('id')}>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+                  onClick={() => handleSort("id")}
+                >
                   <div className="flex items-center">
                     Order ID
-                    {sortField === 'id' && (<span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>)}
+                    {sortField === "id" && (
+                      <span className="ml-1">
+                        {sortDirection === "asc" ? "↑" : "↓"}
+                      </span>
+                    )}
                   </div>
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800" onClick={() => handleSort('total_price')}>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+                  onClick={() => handleSort("total_price")}
+                >
                   <div className="flex items-center">
                     Total (INR)
-                    {sortField === 'total_price' && (<span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>)}
+                    {sortField === "total_price" && (
+                      <span className="ml-1">
+                        {sortDirection === "asc" ? "↑" : "↓"}
+                      </span>
+                    )}
                   </div>
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800" onClick={() => handleSort('created_at')}>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+                  onClick={() => handleSort("created_at")}
+                >
                   <div className="flex items-center">
                     Date
-                    {sortField === 'created_at' && (<span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>)}
+                    {sortField === "created_at" && (
+                      <span className="ml-1">
+                        {sortDirection === "asc" ? "↑" : "↓"}
+                      </span>
+                    )}
                   </div>
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Customer Name</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Shopify ID</th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                >
+                  Customer Name
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                >
+                  Shopify ID
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {filteredOrders.map((order) => (
-                <tr key={order.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/40">
+                <tr
+                  key={order.id}
+                  className="hover:bg-gray-50 dark:hover:bg-gray-900/40"
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <ShoppingCart className="h-5 w-5 text-gray-400 mr-3" />
-                      <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{order.id}</div>
+                      <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                        {order.id}
+                      </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center text-sm text-gray-900 dark:text-gray-100">
-                      <span className="font-medium">{formatINR(order.total_price)}</span>
+                      <span className="font-medium">
+                        {formatINR(order.total_price)}
+                      </span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{formatDate(order.created_at)}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{getCustomerName(order.customers)}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{order.shopify_id || '—'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                    {formatDate(order.created_at)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                    {getCustomerName(order.customers)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                    {order.shopify_id || "—"}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -226,8 +297,14 @@ const Orders = () => {
       {filteredOrders.length === 0 && (
         <div className="text-center py-12">
           <ShoppingCart className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">No orders found</h3>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-300">{searchTerm || dateFrom || dateTo ? 'Try adjusting your filters.' : 'No orders available.'}</p>
+          <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+            No orders found
+          </h3>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-300">
+            {searchTerm || dateFrom || dateTo
+              ? "Try adjusting your filters."
+              : "No orders available."}
+          </p>
         </div>
       )}
     </div>
