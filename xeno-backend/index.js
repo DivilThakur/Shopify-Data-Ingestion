@@ -1,5 +1,6 @@
 import express from "express";
 import "./scheduleJob.js";
+import redis from "./redisClient.js";
 import prisma from "./prismaClient.js";
 import dotenv from "dotenv";
 import cors from "cors";
@@ -28,6 +29,17 @@ app.use("/webhook", webhookRoutes);
 app.use("/ingest", ingestRoutes);
 app.use("/api", apiRoutes);
 app.use("/tenants", tenantsRouter);
+
+async function checkRedis() {
+  try {
+    const pong = await redis.get("ping-test");
+    console.log("✅ Redis connection is live");
+  } catch (err) {
+    console.error("❌ Redis connection failed:", err.message);
+  }
+}
+
+checkRedis();
 
 app.get("/", (req, res) => {
   res.send("Xeno backend with PostgreSQL is running ✅");
