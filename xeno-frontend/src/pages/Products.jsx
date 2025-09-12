@@ -125,7 +125,7 @@ const Products = () => {
               <div className="mt-4 flex items-center justify-between">
                 <div className="flex items-center text-sm text-gray-500 dark:text-gray-300">
                   <span className="font-medium text-gray-900 dark:text-gray-100">
-                    <span className="text-xs mr-1">INR</span>
+                    <span className="text-xs mr-1">₹</span>
                     {Number(product.price || 0).toLocaleString()}
                   </span>
                 </div>

@@ -129,7 +129,7 @@ const Dashboard = () => {
                         </div>
                         <div className="flex-shrink-0 text-right">
                           <p className="text-sm font-medium text-gray-900">
-                            $
+                            ₹{" "}
                             {Number(customer.total_spent || 0).toLocaleString()}
                           </p>
                         </div>
