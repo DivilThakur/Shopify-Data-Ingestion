@@ -40,13 +40,13 @@ export const ThemeProvider = ({ children }) => {
     try { localStorage.setItem('theme', value); } catch {}
   };
 
-  // Apply immediately before paint to avoid wrong theme flash and ensure sync
+ 
   useLayoutEffect(() => {
     applyTheme(theme);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, []);
 
-  // Apply on updates
+
   useEffect(() => {
     applyTheme(theme);
   }, [theme]);

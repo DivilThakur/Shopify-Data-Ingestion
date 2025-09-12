@@ -1,4 +1,3 @@
-// Application configuration
 export const config = {
   API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000',
   APP_NAME: import.meta.env.VITE_APP_NAME || 'Xeno Dashboard',
@@ -25,8 +24,8 @@ export const config = {
   
   // UI Configuration
   UI: {
-    SIDEBAR_WIDTH: '16rem', // 256px
-    HEADER_HEIGHT: '4rem', // 64px
+    SIDEBAR_WIDTH: '16rem', 
+    HEADER_HEIGHT: '4rem',
     ANIMATION_DURATION: 200
   }
 };
