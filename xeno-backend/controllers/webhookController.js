@@ -1,4 +1,5 @@
 import prisma from "../prismaClient.js";
+import redis from "../redisClient.js";
 
 const getTenantId = async (shopDomain) => {
   const tenant = await prisma.tenants.findFirst({
@@ -46,6 +47,8 @@ export const handleCustomerWebhook = async (req, res) => {
         },
       });
     }
+    const cacheKey = `customers:${tenant_id}`;
+    await redis.del(cacheKey);
 
     console.log(
       `Processed ${customers.length} customer(s) for tenant ${tenant_id}`
@@ -89,6 +92,9 @@ export const handleProductWebhook = async (req, res) => {
         },
       });
     }
+
+    const cacheKey = `products:${tenant_id}`;
+    await redis.del(cacheKey);
 
     console.log(
       `Processed ${products.length} product(s) for tenant ${tenant_id}`
@@ -158,6 +164,9 @@ export const handleOrderWebhook = async (req, res) => {
         },
       });
 
+      const cacheKey = `orders:${tenant_id}`;
+      await redis.del(cacheKey);
+
       if (localCustomerId) {
         const totalSpent = await prisma.orders.aggregate({
           _sum: { total_price: true },
@@ -226,6 +235,8 @@ export const handleCartWebhook = async (req, res) => {
       },
     });
 
+    await redis.del(`checkouts:${tenantId}`);
+
     console.log(
       `Cart ${shopifyCartId} processed as ${status} for tenant ${tenantId}`
     );
@@ -283,6 +294,8 @@ export const handleCheckoutWebhook = async (req, res) => {
         status,
       },
     });
+
+    await redis.del(`checkouts:${tenantId}`);
 
     console.log(
       `Checkout ${shopifyCheckoutId} processed as ${status} for tenant ${tenantId}`
