@@ -1,9 +1,9 @@
-import { PrismaClient } from "@prisma/client";
+import pkg from "@prisma/client";
+const { PrismaClient } = pkg;
 import { faker } from "@faker-js/faker";
 
 const prisma = new PrismaClient();
 
-// Helper function: random date in the past 'daysBack' days
 function randomPastDate(daysBack = 60) {
   const today = new Date();
   const past = new Date();
@@ -14,9 +14,8 @@ function randomPastDate(daysBack = 60) {
 }
 
 async function main() {
-  const tenantId = 2; // <-- Replace with your tenant ID
+  const tenantId = 2;
 
-  // Seed Customers
   const customers = [];
   for (let i = 0; i < 5; i++) {
     const firstName = faker.person.firstName();
@@ -38,8 +37,6 @@ async function main() {
     });
     customers.push(customer);
   }
-
-  // Seed Products
   const products = [];
   for (let i = 0; i < 10; i++) {
     const product = await prisma.products.create({
@@ -53,8 +50,6 @@ async function main() {
     });
     products.push(product);
   }
-
-  // Seed Orders (random customer)
   for (let i = 0; i < 15; i++) {
     const randomCustomer =
       customers[Math.floor(Math.random() * customers.length)];
@@ -73,8 +68,6 @@ async function main() {
       },
     });
   }
-
-  // Seed Carts
   const cartStatuses = ["ACTIVE", "ABANDONED", "COMPLETED"];
   for (let i = 0; i < 50; i++) {
     const randomCustomer =
@@ -94,8 +87,6 @@ async function main() {
       },
     });
   }
-
-  // Seed Checkouts
   const checkoutStatuses = ["STARTED", "ABANDONED", "COMPLETED"];
   for (let i = 0; i < 40; i++) {
     const randomCustomer =

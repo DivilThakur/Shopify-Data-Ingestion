@@ -1,12 +1,11 @@
 import express from "express";
 import "./scheduleJob.js";
-import redis from "./redisClient.js";
-import prisma from "./prismaClient.js";
 import dotenv from "dotenv";
 import cors from "cors";
 import bodyParser from "body-parser";
+import redis from "./redisClient.js";
+import prisma from "./prismaClient.js";
 import tenantsRouter from "./routes/tenants.js";
-import ingestRoutes from "./routes/ingest.js";
 import webhookRoutes from "./routes/webhooks.js";
 import apiRoutes from "./routes/api.js";
 
@@ -26,7 +25,6 @@ app.use(express.json());
 app.use(cors());
 
 app.use("/webhook", webhookRoutes);
-app.use("/ingest", ingestRoutes);
 app.use("/api", apiRoutes);
 app.use("/tenants", tenantsRouter);
 

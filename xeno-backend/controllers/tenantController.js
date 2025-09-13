@@ -8,6 +8,7 @@ export const registerTenant = async (req, res) => {
   try {
     const { name, email, password, store_url, api_key, webhook_secret } =
       req.body;
+    
     if (
       !name ||
       !email ||
@@ -17,6 +18,15 @@ export const registerTenant = async (req, res) => {
       !webhook_secret
     ) {
       return res.status(400).json({ error: "All fields are required" });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: "Invalid email format" });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ error: "Password must be at least 6 characters long" });
     }
 
     const existing = await prisma.tenants.findUnique({ where: { email } });

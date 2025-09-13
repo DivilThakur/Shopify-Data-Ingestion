@@ -115,7 +115,6 @@ const Insights = () => {
 
   return (
     <div className="space-y-6">
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {stats.map((stat) => {
           const Icon = stat.icon;
@@ -148,10 +147,7 @@ const Insights = () => {
         })}
       </div>
 
-      {/* Revenue & Orders Trend Chart */}
       <div className="bg-white p-4 rounded-lg shadow">
-        {" "}
-        {/* reduced padding */}
         <h3 className="text-lg font-medium text-gray-900 mb-4">
           Revenue & Orders Trend
         </h3>
@@ -191,7 +187,6 @@ const Insights = () => {
         </ResponsiveContainer>
       </div>
 
-      {/* Top Customers */}
       {insights?.topCustomers && insights.topCustomers.length > 0 && (
         <div className="bg-white shadow rounded-lg">
           <div className="px-4 py-5 sm:p-6">

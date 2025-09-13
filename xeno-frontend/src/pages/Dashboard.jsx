@@ -54,7 +54,7 @@ const Dashboard = () => {
     },
     {
       name: "Total Revenue",
-      value: `$${Number(insights?.totalRevenue || 0).toLocaleString()}`,
+      value: `₹${Number(insights?.totalRevenue || 0).toLocaleString()}`,
       icon: DollarSign,
       color: "bg-yellow-500",
     },

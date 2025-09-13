@@ -1,6 +1,6 @@
 import express from "express";
+import { verifyShopifyWebhook } from "../middleware/webhookMiddleware.js";
 import {
-  verifyShopifyWebhook,
   handleCustomerWebhook,
   handleProductWebhook,
   handleOrderWebhook,
