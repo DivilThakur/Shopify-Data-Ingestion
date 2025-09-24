@@ -4,6 +4,13 @@ A **Node.js + Express** backend with a **React/Vite** dashboard for ingesting Sh
 
 ---
 
+🔑 Demo Credentials:
+🔗 Live Demo: [https://shopify-data-demo.vercel.app](https://shopify-data-ingestion.vercel.app)
+
+Email: nike@gmail.com , addidas@gmail.com
+
+Password: 12345678
+
 ## 🚀 Setup Instructions
 
 ### Prerequisites
@@ -83,9 +90,6 @@ Frontend (React + Vite) <----> API Endpoints (customers, products, orders, insig
 |             | POST /webhooks/orders            | Handle order events |
 |             | POST /webhooks/carts             | Handle cart events |
 |             | POST /webhooks/checkouts         | Handle checkout events |
-| **Bulk Ingestion** | POST /ingest/customers     | Bulk insert/upsert customers |
-|             | POST /ingest/products            | Bulk insert/upsert products |
-|             | POST /ingest/orders              | Bulk insert/upsert orders |
 | **Tenant Management** | POST /tenants/register  | Register new tenant |
 |             | POST /tenants/login              | Tenant login (JWT) |
 | **Dashboard APIs** | GET /api/customers         | List customers |
